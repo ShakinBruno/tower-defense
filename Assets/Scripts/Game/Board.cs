@@ -10,8 +10,11 @@ public class Board : MonoBehaviour
 
     private readonly Dictionary<Vector2Int, Tile> grid = new Dictionary<Vector2Int, Tile>();
     private readonly Queue<Tile> frontier = new Queue<Tile>();
+    private readonly List<Tile> spawnPoints = new List<Tile>();
     private readonly Collider[] contentCollider = new Collider[1];
     private TileContentFactory contentFactory;
+
+    public int SpawnPointCount => spawnPoints.Count;
 
     private void Start()
     {
@@ -48,7 +51,10 @@ public class Board : MonoBehaviour
 
             tile.IsAlternative = (coordinates.x & 1) == 0;
             if ((coordinates.y & 1) == 0) tile.IsAlternative = !tile.IsAlternative;
+
             tile.Content = tileContent != null ? tileContent : factory.Get(TileContentType.Empty);
+            if (tile.Content.Type == TileContentType.SpawnPoint) spawnPoints.Add(tile);
+
             grid.Add(coordinates, tile);
         }
 
@@ -90,6 +96,11 @@ public class Board : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit)) return null;
         Vector2Int coordinates = PositionToCoordinates(hit.point);
         return grid.ContainsKey(coordinates) ? grid[coordinates] : null;
+    }
+
+    public Tile GetSpawnPoint(int index)
+    {
+        return spawnPoints[index];
     }
 
     private TileContent GetTileContent(Tile tile)

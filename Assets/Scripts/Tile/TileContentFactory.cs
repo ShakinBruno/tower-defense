@@ -1,13 +1,10 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 [CreateAssetMenu]
-public class TileContentFactory : ScriptableObject
+public class TileContentFactory : GameObjectFactory
 {
     [SerializeField] private TileContent emptyPrefab;
     [SerializeField] private TileContent obstaclePrefab;
-
-    private Scene contentScene;
 
     public TileContent Get(TileContentType type)
     {
@@ -26,31 +23,8 @@ public class TileContentFactory : ScriptableObject
 
     private TileContent Get(TileContent prefab)
     {
-        TileContent instance = Instantiate(prefab);
+        TileContent instance = CreateGameObjectInstance(prefab);
         instance.OriginFactory = this;
-        MoveToFactoryScene(instance.gameObject);
         return instance;
-    }
-
-    private void MoveToFactoryScene(GameObject gameObject)
-    {
-        if (!contentScene.isLoaded)
-        {
-            if (Application.isEditor)
-            {
-                contentScene = SceneManager.GetSceneByName(name);
-
-                if (!contentScene.isLoaded)
-                {
-                    contentScene = SceneManager.CreateScene(name);
-                }
-            }
-            else
-            {
-                contentScene = SceneManager.CreateScene(name);
-            }
-        }
-
-        SceneManager.MoveGameObjectToScene(gameObject, contentScene);
     }
 }

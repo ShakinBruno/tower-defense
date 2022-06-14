@@ -3,5 +3,6 @@
     Empty,
     Wall,
     Destination,
-    Obstacle
+    Obstacle,
+    SpawnPoint
 }

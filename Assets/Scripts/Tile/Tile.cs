@@ -7,7 +7,7 @@ public class Tile : MonoBehaviour
     [SerializeField] private Transform arrow;
 
     private int distance;
-    private Tile north, east, south, west, nextOnPath;
+    private Tile north, east, south, west;
     private TileContent content;
 
     private static readonly Quaternion
@@ -17,7 +17,10 @@ public class Tile : MonoBehaviour
         westRotation = Quaternion.Euler(90f, 270f, 0f);
 
     public bool IsAlternative { get; set; }
-
+    public Tile NextOnPath { get; private set; }
+    public Vector3 ExitPoint { get; private set; }
+    public Direction PathDirection { get; private set; }
+    
     public TileContent Content
     {
         get => content;
@@ -30,29 +33,32 @@ public class Tile : MonoBehaviour
     }
 
     public bool HasPath => distance != int.MaxValue;
-    public Tile GrowPathNorth() => GrowPathTo(north);
-    public Tile GrowPathEast() => GrowPathTo(east);
-    public Tile GrowPathSouth() => GrowPathTo(south);
-    public Tile GrowPathWest() => GrowPathTo(west);
+    public Tile GrowPathNorth() => GrowPathTo(north, Direction.South);
+    public Tile GrowPathEast() => GrowPathTo(east, Direction.West);
+    public Tile GrowPathSouth() => GrowPathTo(south, Direction.North);
+    public Tile GrowPathWest() => GrowPathTo(west, Direction.East);
 
-    private Tile GrowPathTo(Tile neighbor)
+    private Tile GrowPathTo(Tile neighbor, Direction direction)
     {
         if (neighbor == null || Content.Type == TileContentType.Wall || neighbor.HasPath) return null;
         neighbor.distance = distance + 1;
-        neighbor.nextOnPath = this;
+        neighbor.NextOnPath = this;
+        neighbor.ExitPoint = neighbor.transform.localPosition + direction.GetHalfVector();
+        neighbor.PathDirection = direction;
         return neighbor.Content.Type != TileContentType.Obstacle ? neighbor : null;
     }
 
     public void BecomeDestination()
     {
         distance = 0;
-        nextOnPath = null;
+        NextOnPath = null;
+        ExitPoint = transform.localPosition;
     }
 
     public void ClearPath()
     {
         distance = int.MaxValue;
-        nextOnPath = null;
+        NextOnPath = null;
     }
 
     public void ShowPath()
@@ -65,9 +71,9 @@ public class Tile : MonoBehaviour
 
         arrow.gameObject.SetActive(true);
         arrow.localRotation =
-            nextOnPath == north ? northRotation :
-            nextOnPath == east ? eastRotation :
-            nextOnPath == south ? southRotation :
+            NextOnPath == north ? northRotation :
+            NextOnPath == east ? eastRotation :
+            NextOnPath == south ? southRotation :
             westRotation;
     }
 
