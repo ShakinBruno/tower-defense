@@ -15,10 +15,6 @@ public class CameraController : MonoBehaviour
     private void Awake()
     {
         camera = cameraTransform.GetComponent<Camera>();
-    }
-
-    private void Start()
-    {
         newPosition = transform.position;
         newZoom = cameraTransform.localPosition;
         newRotation = transform.eulerAngles;
@@ -62,8 +58,8 @@ public class CameraController : MonoBehaviour
 
     private void SwipeToMove()
     {
-        Vector3 delta = TouchPositionDelta(Input.GetTouch(0));
-        newPosition += delta;
+        Vector3 delta = transform.InverseTransformDirection(TouchPositionDelta(Input.GetTouch(0)));
+        newPosition += transform.TransformDirection(new Vector3(delta.x , 0f, delta.y));
         newPosition.x = Mathf.Clamp(newPosition.x, positionMin.x, positionMax.x);
         newPosition.z = Mathf.Clamp(newPosition.z, positionMin.z, positionMax.z);
         transform.position = new Vector3(newPosition.x, 0f, newPosition.z);

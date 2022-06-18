@@ -1,21 +1,37 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Game : MonoBehaviour
 {
     [SerializeField] private Board board;
     [SerializeField] private TileContentFactory tileContentFactory;
     [SerializeField] private EnemyFactory enemyFactory;
+    [SerializeField] private WarFactory warFactory;
     [SerializeField, Range(0.1f, 10f)] private float spawnSpeed = 1f;
 
     private bool isDragging;
     private float spawnProgress;
-    private readonly EnemyCollection enemies = new EnemyCollection();
+    private readonly GameBehaviorCollection enemies = new GameBehaviorCollection();
+    private readonly GameBehaviorCollection nonEnemies = new GameBehaviorCollection();
+    private static Game instance;
     private Camera mainCamera;
+    private UIHandler uiHandler;
 
     private void Awake()
     {
         mainCamera = Camera.main;
+        uiHandler = GetComponent<UIHandler>();
         board.Initialize(tileContentFactory);
+    }
+
+    private void OnEnable()
+    {
+        instance = this;
+    }
+
+    private void OnDisable()
+    {
+        instance = null;
     }
 
     private void Update()
@@ -39,14 +55,31 @@ public class Game : MonoBehaviour
         }
 
         spawnProgress += spawnSpeed * Time.deltaTime;
-        
+
         while (spawnProgress >= 1f)
         {
             spawnProgress -= 1f;
             SpawnEnemy();
         }
-        
+
         enemies.GameUpdate();
+        Physics.SyncTransforms();
+        board.GameUpdate();
+        nonEnemies.GameUpdate();
+    }
+
+    public static Shell SpawnShell()
+    {
+        Shell shell = instance.warFactory.Shell;
+        instance.nonEnemies.Add(shell);
+        return shell;
+    }
+
+    public static Explosion SpawnExplosion()
+    {
+        Explosion explosion = instance.warFactory.Explosion;
+        instance.nonEnemies.Add(explosion);
+        return explosion;
     }
 
     private void SpawnEnemy()
@@ -59,9 +92,19 @@ public class Game : MonoBehaviour
 
     private void HandleTouch(Touch touch)
     {
-        if (isDragging) return;
+        if (EventSystem.current.IsPointerOverGameObject() || isDragging) return;
         Ray touchRay = mainCamera.ScreenPointToRay(touch.position);
         Tile tile = board.GetTile(touchRay);
-        if (tile != null) board.ToggleObstacle(tile);
+        if (tile == null) return;
+
+        switch (uiHandler.SelectedType)
+        {
+            case TileContentType.Obstacle:
+                board.ToggleObstacle(tile);
+                break;
+            case TileContentType.Tower:
+                board.ToggleTower(tile, uiHandler.SelectedTowerType);
+                break;
+        }
     }
 }

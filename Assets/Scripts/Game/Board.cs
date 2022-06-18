@@ -4,14 +4,15 @@ using UnityEngine;
 public class Board : MonoBehaviour
 {
     [SerializeField] private Transform tiles;
-    [SerializeField] private LayerMask contentMask;
     [SerializeField] private float overlapBoxSize;
-    [SerializeField] private bool showPaths;
 
+    private const int contentLayerMask = 1 << 6;
+    private const int nonEnemyLayerMask = ~(1 << 7);
     private readonly Dictionary<Vector2Int, Tile> grid = new Dictionary<Vector2Int, Tile>();
     private readonly Queue<Tile> frontier = new Queue<Tile>();
     private readonly List<Tile> spawnPoints = new List<Tile>();
-    private readonly Collider[] contentCollider = new Collider[1];
+    private readonly List<TileContent> updatingContent = new List<TileContent>();
+    private static readonly Collider[] contentBuffer = new Collider[1];
     private TileContentFactory contentFactory;
 
     public int SpawnPointCount => spawnPoints.Count;
@@ -19,24 +20,6 @@ public class Board : MonoBehaviour
     private void Start()
     {
         FindPaths();
-    }
-
-    private void Update()
-    {
-        if (showPaths) // TODO: remove showing path when everything works well
-        {
-            foreach (Tile tile in grid.Values)
-            {
-                tile.ShowPath();
-            }
-        }
-        else
-        {
-            foreach (Tile tile in grid.Values)
-            {
-                tile.HidePath();
-            }
-        }
     }
 
     public void Initialize(TileContentFactory factory)
@@ -52,8 +35,10 @@ public class Board : MonoBehaviour
             tile.IsAlternative = (coordinates.x & 1) == 0;
             if ((coordinates.y & 1) == 0) tile.IsAlternative = !tile.IsAlternative;
 
-            tile.Content = tileContent != null ? tileContent : factory.Get(TileContentType.Empty);
-            if (tile.Content.Type == TileContentType.SpawnPoint) spawnPoints.Add(tile);
+            tile.Content = tileContent != null ? tileContent : factory.Get(TileContentType.None);
+            tile.Content.OriginFactory = factory;
+            if (tile.Content.isSpawnPoint) spawnPoints.Add(tile);
+            if (tile.Content.isTower) updatingContent.Add(tile.Content);
 
             grid.Add(coordinates, tile);
         }
@@ -72,29 +57,89 @@ public class Board : MonoBehaviour
         }
     }
 
+    public void GameUpdate()
+    {
+        foreach (TileContent content in updatingContent)
+        {
+            content.GameUpdate();
+        }
+    }
+
     public void ToggleObstacle(Tile tile)
     {
-        if (tile.Content.Type == TileContentType.Obstacle)
+        if (tile.Content.isObstacle)
         {
-            tile.Content = contentFactory.Get(TileContentType.Empty);
+            tile.Content = contentFactory.Get(TileContentType.None);
+            tile.previousType = TileContentType.Obstacle;
             FindPaths();
         }
-        else if (tile.Content.Type == TileContentType.Empty)
+        else if (tile.Content.isNone)
         {
             tile.Content = contentFactory.Get(TileContentType.Obstacle);
+            TileContentType tempType = tile.previousType;
+            tile.previousType = TileContentType.None;
 
             if (!FindPaths())
             {
-                tile.Content = contentFactory.Get(TileContentType.Empty);
+                tile.Content = contentFactory.Get(TileContentType.None);
+                tile.previousType = tempType;
                 FindPaths();
             }
         }
     }
 
+    public void ToggleTower(Tile tile, TowerType towerType)
+    {
+        if (tile.Content.isTower)
+        {
+            if (((Tower)tile.Content).TowerType == towerType)
+            {
+                updatingContent.Remove(tile.Content);
+                tile.Content = tile.previousType switch
+                {
+                    TileContentType.None => contentFactory.Get(TileContentType.None),
+                    TileContentType.Wall => contentFactory.Get(TileContentType.Wall),
+                    _ => tile.Content
+                };
+                FindPaths();
+            }
+            else
+            {
+                tile.Content = contentFactory.Get(towerType);
+                updatingContent.Add(tile.Content);
+            }
+            
+            tile.previousType = TileContentType.Tower;
+        }
+        else if (tile.Content.isNone)
+        {
+            tile.Content = contentFactory.Get(towerType);
+            TileContentType tempType = tile.previousType;
+            tile.previousType = TileContentType.None;
+
+            if (FindPaths())
+            {
+                updatingContent.Add(tile.Content);
+            }
+            else
+            {
+                tile.Content = contentFactory.Get(TileContentType.None);
+                tile.previousType = tempType;
+                FindPaths();
+            }
+        }
+        else if (tile.Content.isWall)
+        {
+            tile.Content = contentFactory.Get(towerType);
+            tile.previousType = TileContentType.Wall;
+            updatingContent.Add(tile.Content);
+        }
+    }
+
     public Tile GetTile(Ray ray)
     {
-        if (!Physics.Raycast(ray, out RaycastHit hit)) return null;
-        Vector2Int coordinates = PositionToCoordinates(hit.point);
+        if (!Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, nonEnemyLayerMask)) return null;
+        Vector2Int coordinates = PositionToCoordinates(hit.transform.position);
         return grid.ContainsKey(coordinates) ? grid[coordinates] : null;
     }
 
@@ -108,18 +153,18 @@ public class Board : MonoBehaviour
         int boxSize = Physics.OverlapBoxNonAlloc(
             tile.transform.position + Vector3.up * overlapBoxSize,
             Vector3.one * overlapBoxSize,
-            contentCollider,
+            contentBuffer,
             Quaternion.identity,
-            contentMask);
+            contentLayerMask);
 
-        return boxSize > 0 ? contentCollider[0].transform.GetComponentInParent<TileContent>() : null;
+        return boxSize > 0 ? contentBuffer[0].transform.GetComponentInParent<TileContent>() : null;
     }
 
     private bool FindPaths()
     {
         foreach (Tile tile in grid.Values)
         {
-            if (tile.Content.Type == TileContentType.Destination)
+            if (tile.Content.isDestination)
             {
                 tile.BecomeDestination();
                 frontier.Enqueue(tile);
@@ -160,12 +205,9 @@ public class Board : MonoBehaviour
             if (!tile.HasPath) return false;
         }
 
-        if (showPaths)
+        foreach (Tile tile in grid.Values)
         {
-            foreach (Tile tile in grid.Values)
-            {
-                tile.ShowPath();
-            }
+            tile.ShowPath();
         }
 
         return true;

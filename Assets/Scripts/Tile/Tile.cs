@@ -20,6 +20,7 @@ public class Tile : MonoBehaviour
     public Tile NextOnPath { get; private set; }
     public Vector3 ExitPoint { get; private set; }
     public Direction PathDirection { get; private set; }
+    public TileContentType previousType { get; set; }
     
     public TileContent Content
     {
@@ -31,7 +32,7 @@ public class Tile : MonoBehaviour
             content.transform.localPosition = transform.localPosition;
         }
     }
-
+    
     public bool HasPath => distance != int.MaxValue;
     public Tile GrowPathNorth() => GrowPathTo(north, Direction.South);
     public Tile GrowPathEast() => GrowPathTo(east, Direction.West);
@@ -40,12 +41,12 @@ public class Tile : MonoBehaviour
 
     private Tile GrowPathTo(Tile neighbor, Direction direction)
     {
-        if (neighbor == null || Content.Type == TileContentType.Wall || neighbor.HasPath) return null;
+        if (neighbor == null || Content.isWall || neighbor.HasPath) return null;
         neighbor.distance = distance + 1;
         neighbor.NextOnPath = this;
         neighbor.ExitPoint = neighbor.transform.localPosition + direction.GetHalfVector();
         neighbor.PathDirection = direction;
-        return neighbor.Content.Type != TileContentType.Obstacle ? neighbor : null;
+        return neighbor.Content.BlocksPath ? null : neighbor;
     }
 
     public void BecomeDestination()
@@ -63,7 +64,7 @@ public class Tile : MonoBehaviour
 
     public void ShowPath()
     {
-        if (Content.Type == TileContentType.Wall || Content.Type == TileContentType.Destination)
+        if (Content.isWall || Content.isDestination || Content.isSpawnPoint)
         {
             arrow.gameObject.SetActive(false);
             return;
@@ -75,11 +76,6 @@ public class Tile : MonoBehaviour
             NextOnPath == east ? eastRotation :
             NextOnPath == south ? southRotation :
             westRotation;
-    }
-
-    public void HidePath()
-    {
-        arrow.gameObject.SetActive(false);
     }
 
     public static void MakeEastWestNeighbors(Tile east, Tile west)
