@@ -14,13 +14,7 @@ public class Board : MonoBehaviour
     private readonly List<TileContent> updatingContent = new List<TileContent>();
     private static readonly Collider[] contentBuffer = new Collider[1];
     private TileContentFactory contentFactory;
-
     public int SpawnPointCount => spawnPoints.Count;
-
-    private void Start()
-    {
-        FindPaths();
-    }
 
     public void Initialize(TileContentFactory factory)
     {
@@ -28,7 +22,7 @@ public class Board : MonoBehaviour
 
         foreach (Transform child in tiles)
         {
-            Vector2Int coordinates = PositionToCoordinates(child.position);
+            Vector2Int coordinates = PositionToCoordinates(child.localPosition);
             var tile = child.GetComponent<Tile>();
             TileContent tileContent = GetTileContent(tile);
 
@@ -55,8 +49,10 @@ public class Board : MonoBehaviour
                 Tile.MakeNorthSouthNeighbors(grid[coordinates], grid[coordinates + Vector2Int.down]);
             }
         }
+        
+        FindPaths();
     }
-
+    
     public void GameUpdate()
     {
         foreach (TileContent content in updatingContent)
@@ -70,19 +66,15 @@ public class Board : MonoBehaviour
         if (tile.Content.isObstacle)
         {
             tile.Content = contentFactory.Get(TileContentType.None);
-            tile.previousType = TileContentType.Obstacle;
             FindPaths();
         }
         else if (tile.Content.isNone)
         {
             tile.Content = contentFactory.Get(TileContentType.Obstacle);
-            TileContentType tempType = tile.previousType;
-            tile.previousType = TileContentType.None;
 
             if (!FindPaths())
             {
                 tile.Content = contentFactory.Get(TileContentType.None);
-                tile.previousType = tempType;
                 FindPaths();
             }
         }
@@ -92,46 +84,13 @@ public class Board : MonoBehaviour
     {
         if (tile.Content.isTower)
         {
-            if (((Tower)tile.Content).TowerType == towerType)
-            {
-                updatingContent.Remove(tile.Content);
-                tile.Content = tile.previousType switch
-                {
-                    TileContentType.None => contentFactory.Get(TileContentType.None),
-                    TileContentType.Wall => contentFactory.Get(TileContentType.Wall),
-                    _ => tile.Content
-                };
-                FindPaths();
-            }
-            else
-            {
-                tile.Content = contentFactory.Get(towerType);
-                updatingContent.Add(tile.Content);
-            }
-            
-            tile.previousType = TileContentType.Tower;
-        }
-        else if (tile.Content.isNone)
-        {
-            tile.Content = contentFactory.Get(towerType);
-            TileContentType tempType = tile.previousType;
-            tile.previousType = TileContentType.None;
-
-            if (FindPaths())
-            {
-                updatingContent.Add(tile.Content);
-            }
-            else
-            {
-                tile.Content = contentFactory.Get(TileContentType.None);
-                tile.previousType = tempType;
-                FindPaths();
-            }
+            if (((Tower)tile.Content).TowerType != towerType) return;
+            updatingContent.Remove(tile.Content);
+            tile.Content = contentFactory.Get(TileContentType.Wall);
         }
         else if (tile.Content.isWall)
         {
             tile.Content = contentFactory.Get(towerType);
-            tile.previousType = TileContentType.Wall;
             updatingContent.Add(tile.Content);
         }
     }
@@ -151,7 +110,7 @@ public class Board : MonoBehaviour
     private TileContent GetTileContent(Tile tile)
     {
         int boxSize = Physics.OverlapBoxNonAlloc(
-            tile.transform.position + Vector3.up * overlapBoxSize,
+            tile.transform.localPosition + Vector3.up * overlapBoxSize,
             Vector3.one * overlapBoxSize,
             contentBuffer,
             Quaternion.identity,

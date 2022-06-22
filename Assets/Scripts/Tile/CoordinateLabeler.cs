@@ -20,8 +20,8 @@ public class CoordinateLabeler : MonoBehaviour
 
     private void DisplayCoordinates()
     {
-        coordinates.x = Mathf.RoundToInt(transform.parent.position.x);
-        coordinates.y = Mathf.RoundToInt(transform.parent.position.z);
+        coordinates.x = Mathf.RoundToInt(transform.parent.localPosition.x);
+        coordinates.y = Mathf.RoundToInt(transform.parent.localPosition.z);
         label.text = $"{coordinates.x},{coordinates.y}";
         transform.parent.name = coordinates.ToString();
     }

@@ -8,7 +8,6 @@ public class MortarTower : Tower
     [SerializeField, Range(1f, 100f)] private float shellDamage = 10f;
 
     private float launchSpeed, launchProgress;
-
     public override TowerType TowerType => TowerType.Mortar;
 
     private void Awake()

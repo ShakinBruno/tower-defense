@@ -20,8 +20,7 @@ public class Tile : MonoBehaviour
     public Tile NextOnPath { get; private set; }
     public Vector3 ExitPoint { get; private set; }
     public Direction PathDirection { get; private set; }
-    public TileContentType previousType { get; set; }
-    
+
     public TileContent Content
     {
         get => content;
@@ -32,7 +31,7 @@ public class Tile : MonoBehaviour
             content.transform.localPosition = transform.localPosition;
         }
     }
-    
+
     public bool HasPath => distance != int.MaxValue;
     public Tile GrowPathNorth() => GrowPathTo(north, Direction.South);
     public Tile GrowPathEast() => GrowPathTo(east, Direction.West);

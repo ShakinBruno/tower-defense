@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class CameraController : MonoBehaviour
+public class TouchGestures : MonoBehaviour
 {
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private Vector3 positionMin, positionMax;
@@ -15,14 +16,15 @@ public class CameraController : MonoBehaviour
     private void Awake()
     {
         camera = cameraTransform.GetComponent<Camera>();
-        newPosition = transform.position;
+        newPosition = transform.localPosition;
         newZoom = cameraTransform.localPosition;
-        newRotation = transform.eulerAngles;
+        newRotation = transform.localEulerAngles;
     }
 
     private void LateUpdate()
     {
-        plane.SetNormalAndPosition(-transform.forward, transform.position);
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        plane.SetNormalAndPosition(-transform.forward, transform.localPosition);
 
         if (Input.touchCount == 1)
         {
@@ -62,7 +64,7 @@ public class CameraController : MonoBehaviour
         newPosition += transform.TransformDirection(new Vector3(delta.x , 0f, delta.y));
         newPosition.x = Mathf.Clamp(newPosition.x, positionMin.x, positionMax.x);
         newPosition.z = Mathf.Clamp(newPosition.z, positionMin.z, positionMax.z);
-        transform.position = new Vector3(newPosition.x, 0f, newPosition.z);
+        transform.localPosition = new Vector3(newPosition.x, 0f, newPosition.z);
     }
 
     private Vector3 TouchPositionDelta(Touch touch)

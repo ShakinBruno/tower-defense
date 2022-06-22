@@ -5,10 +5,8 @@ public class TargetPoint : MonoBehaviour
 {
     private const int enemyLayerMask = 1 << 7;
     private static readonly Collider[] buffer = new Collider[100];
-
     public static int BufferedCount { get; private set; }
     public Enemy Enemy { get; private set; }
-    
     public Vector3 Position => transform.position;
     public static TargetPoint RandomBuffered => GetBuffered(Random.Range(0, BufferedCount));
 

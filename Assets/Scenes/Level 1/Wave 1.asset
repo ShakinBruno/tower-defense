@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 194a20d3b05a43cd887117ddb427a381, type: 3}
+  m_Name: Wave 1
+  m_EditorClassIdentifier: 
+  waveCooldown: 10
+  spawnSequences:
+  - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
+    type: 0
+    amount: 10
+    spawnCooldown: 5
+    cooldown: 0.25
+  - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
+    type: 1
+    amount: 5
+    spawnCooldown: 7.5
+    cooldown: 1
+  - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
+    type: 2
+    amount: 1
+    spawnCooldown: 10
+    cooldown: 5

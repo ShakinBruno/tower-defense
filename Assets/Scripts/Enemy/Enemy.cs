@@ -7,29 +7,28 @@ public class Enemy : GameBehavior
     private float progress, progressFactor;
     private float directionAngleFrom, directionAngleTo;
     private float speed, pathOffset;
+    private float health;
     private Tile tileFrom, tileTo;
     private Vector3 positionFrom, positionTo;
     private Direction direction;
     private DirectionChange directionChange;
-
     public float Scale { get; private set; }
-    private float Health { get; set; }
     public EnemyFactory OriginFactory { get; set; }
 
-    public void Initialize(float scale, float speed, float pathOffset)
+    public void Initialize(float scale, float speed, float pathOffset, float health)
     {
         Scale = scale;
-        Health = 100f * scale;
         model.localScale = new Vector3(scale, scale, scale);
         this.speed = speed;
         this.pathOffset = pathOffset;
+        this.health = health;
     }
 
     public override bool GameUpdate()
     {
-        if (Health <= 0f)
+        if (health <= 0f)
         {
-            OriginFactory.Reclaim(this);
+            Recycle();
             return false;
         }
 
@@ -39,7 +38,8 @@ public class Enemy : GameBehavior
         {
             if (tileTo == null)
             {
-                OriginFactory.Reclaim(this);
+                Game.EnemyReachedDestination();
+                Recycle();
                 return false;
             }
 
@@ -63,15 +63,21 @@ public class Enemy : GameBehavior
 
     public void ApplyDamage(float damage)
     {
-        Health -= damage;
+        health -= damage;
     }
 
     public void SpawnOn(Tile tile)
     {
+        transform.localPosition = tile.transform.localPosition;
         tileFrom = tile;
         tileTo = tile.NextOnPath;
         progress = 0f;
         PrepareIntro();
+    }
+
+    public override void Recycle()
+    {
+        OriginFactory.Reclaim(this);
     }
 
     private void PrepareNextState()
