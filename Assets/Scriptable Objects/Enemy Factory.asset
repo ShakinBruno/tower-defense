@@ -27,7 +27,7 @@ MonoBehaviour:
       min: 40
       max: 50
   medium:
-    prefab: {fileID: 8085023761113106657, guid: a7fa3f8f6f6a5f244aea20cc25755568, type: 3}
+    prefab: {fileID: 4457721481425905182, guid: 511247815c229da408aafc237a752192, type: 3}
     scale:
       min: 0.9
       max: 1

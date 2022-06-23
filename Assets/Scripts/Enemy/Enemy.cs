@@ -3,6 +3,7 @@
 public class Enemy : GameBehavior
 {
     [SerializeField] private Transform model;
+    [SerializeField] private EnemyAnimations animations;
 
     private float progress, progressFactor;
     private float directionAngleFrom, directionAngleTo;
@@ -10,10 +11,23 @@ public class Enemy : GameBehavior
     private float health;
     private Tile tileFrom, tileTo;
     private Vector3 positionFrom, positionTo;
+    private EnemyAnimator animator;
     private Direction direction;
     private DirectionChange directionChange;
     public float Scale { get; private set; }
     public EnemyFactory OriginFactory { get; set; }
+    public Collider TargetPointCollider { private get; set; }
+    public bool IsValidTarget => animator.CurrentClip == EnemyAnimator.Clip.Move;
+
+    private void Awake()
+    {
+        animator.Configure(model.GetChild(0).gameObject.AddComponent<Animator>(), animations);
+    }
+
+    private void OnDestroy()
+    {
+        animator.Destroy();
+    }
 
     public void Initialize(float scale, float speed, float pathOffset, float health)
     {
@@ -22,14 +36,36 @@ public class Enemy : GameBehavior
         this.speed = speed;
         this.pathOffset = pathOffset;
         this.health = health;
+        animator.PlayIntro();
+        TargetPointCollider.enabled = false;
     }
 
     public override bool GameUpdate()
     {
+        animator.GameUpdate();
+
+        if (animator.CurrentClip == EnemyAnimator.Clip.Intro)
+        {
+            if (!animator.IsDone) return true;
+            animator.PlayMove(animations.MoveAnimationSpeed * speed / Scale);
+            TargetPointCollider.enabled = true;
+        }
+        else if (animator.CurrentClip >= EnemyAnimator.Clip.Outro)
+        {
+            if (animator.IsDone)
+            {
+                Recycle();
+                return false;
+            }
+
+            return true;
+        }
+
         if (health <= 0f)
         {
-            Recycle();
-            return false;
+            animator.PlayDying();
+            TargetPointCollider.enabled = false;
+            return true;
         }
 
         progress += Time.deltaTime * progressFactor;
@@ -39,8 +75,9 @@ public class Enemy : GameBehavior
             if (tileTo == null)
             {
                 Game.EnemyReachedDestination();
-                Recycle();
-                return false;
+                animator.PlayOutro();
+                TargetPointCollider.enabled = false;
+                return true;
             }
 
             progress = (progress - 1f) / progressFactor;
@@ -68,7 +105,6 @@ public class Enemy : GameBehavior
 
     public void SpawnOn(Tile tile)
     {
-        transform.localPosition = tile.transform.localPosition;
         tileFrom = tile;
         tileTo = tile.NextOnPath;
         progress = 0f;
@@ -77,6 +113,7 @@ public class Enemy : GameBehavior
 
     public override void Recycle()
     {
+        animator.Stop();
         OriginFactory.Reclaim(this);
     }
 
@@ -149,6 +186,7 @@ public class Enemy : GameBehavior
     private void PrepareIntro()
     {
         positionFrom = tileFrom.transform.localPosition;
+        transform.localPosition = positionFrom;
         positionTo = tileFrom.ExitPoint;
         direction = tileFrom.PathDirection;
         directionChange = DirectionChange.None;

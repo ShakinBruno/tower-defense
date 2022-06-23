@@ -13,6 +13,7 @@ public class TargetPoint : MonoBehaviour
     private void Awake()
     {
         Enemy = transform.root.GetComponent<Enemy>();
+        Enemy.TargetPointCollider = GetComponent<Collider>();
     }
 
     public static bool FillBuffer(Vector3 position, float range)

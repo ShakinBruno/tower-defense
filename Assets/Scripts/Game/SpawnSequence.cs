@@ -24,7 +24,7 @@ public class SpawnSequence
 
         public IEnumerator Progress()
         {
-            GameHUD.UpdateWaveInfo($"{sequence.type.ToString()} is coming in:");
+            GameHUD.UpdateWaveInfo($"{sequence.type.ToString()} x{sequence.amount} is coming in:");
             var cooldown = new WaitForSeconds(sequence.cooldown);
 
             for (float i = sequence.spawnCooldown; i >= 0f; i -= Time.deltaTime)

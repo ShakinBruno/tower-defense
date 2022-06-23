@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-public abstract class WarEntity : GameBehavior
+﻿public abstract class WarEntity : GameBehavior
 {
     public WarFactory OriginFactory { get; set; }
 

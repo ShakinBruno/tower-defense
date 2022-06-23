@@ -20,7 +20,7 @@ public abstract class Tower : TileContent
 
     protected bool TrackTarget(ref TargetPoint target)
     {
-        if (target == null) return false;
+        if (target == null || !target.Enemy.IsValidTarget) return false;
         Vector3 a = transform.localPosition;
         Vector3 b = target.Position;
         float x = a.x - b.x;

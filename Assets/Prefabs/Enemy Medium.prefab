@@ -139,9 +139,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6a8df56737b47aa8393be82befd8381, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyMask:
-    serializedVersion: 2
-    m_Bits: 128
 --- !u!1 &7068890059885764366
 GameObject:
   m_ObjectHideFlags: 0
@@ -187,3 +184,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   model: {fileID: 854766252001658554}
+  animation: {fileID: 11400000, guid: a4f6d9573808b2f44a733f2f2c2d6db6, type: 2}
