@@ -5,7 +5,7 @@ public class TileContentFactory : GameObjectFactory
 {
     [SerializeField] private TileContent emptyPrefab;
     [SerializeField] private TileContent wallPrefab;
-    [SerializeField] private TileContent obstaclePrefab;
+    [SerializeField] private Obstacle obstaclePrefab;
     [SerializeField] private Tower[] towerPrefabs;
 
     public TileContent Get(TileContentType type)

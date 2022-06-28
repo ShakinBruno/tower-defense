@@ -61,38 +61,62 @@ public class Board : MonoBehaviour
         }
     }
 
-    public void ToggleObstacle(Tile tile)
+    public void BuyObstacle(Tile tile, ref int playerBank)
     {
-        if (tile.Content.isObstacle)
+        if (!tile.Content.isNone) return;
+        tile.Content = contentFactory.Get(TileContentType.Obstacle);
+        
+        if (!FindPaths())
+        {
+            tile.Content = contentFactory.Get(TileContentType.None);
+            FindPaths();
+            return;
+        }
+        
+        int obstacleValue = ((Obstacle)tile.Content).Cost;
+        
+        if (playerBank - obstacleValue >= 0)
+        {
+            playerBank -= obstacleValue;
+        }
+        else
         {
             tile.Content = contentFactory.Get(TileContentType.None);
             FindPaths();
         }
-        else if (tile.Content.isNone)
-        {
-            tile.Content = contentFactory.Get(TileContentType.Obstacle);
+    }
 
-            if (!FindPaths())
-            {
-                tile.Content = contentFactory.Get(TileContentType.None);
-                FindPaths();
-            }
+    public void SellObstacle(Tile tile, ref int playerBank)
+    {
+        int obstacleValue = ((Obstacle)tile.Content).Cost;
+        tile.Content = contentFactory.Get(TileContentType.None);
+        playerBank += Mathf.RoundToInt(obstacleValue * 0.5f);
+        FindPaths();
+    }
+
+    public void BuyTower(Tile tile, TowerType towerType, ref int playerBank)
+    {
+        if (!tile.Content.isWall) return;
+        tile.Content = contentFactory.Get(towerType);
+        int towerValue = ((Tower)tile.Content).Cost;
+
+        if (playerBank - towerValue >= 0)
+        {
+            updatingContent.Add(tile.Content);
+            playerBank -= towerValue;
+        }
+        else
+        {
+            tile.Content = contentFactory.Get(TileContentType.Wall);
         }
     }
 
-    public void ToggleTower(Tile tile, TowerType towerType)
+    public void SellTower(Tile tile, ref int playerBank)
     {
-        if (tile.Content.isTower)
-        {
-            if (((Tower)tile.Content).TowerType != towerType) return;
-            updatingContent.Remove(tile.Content);
-            tile.Content = contentFactory.Get(TileContentType.Wall);
-        }
-        else if (tile.Content.isWall)
-        {
-            tile.Content = contentFactory.Get(towerType);
-            updatingContent.Add(tile.Content);
-        }
+        int towerValue = ((Tower)tile.Content).Cost;
+        updatingContent.Remove(tile.Content);
+        tile.Content = contentFactory.Get(TileContentType.Wall);
+        playerBank += Mathf.RoundToInt(towerValue * 0.5f);
     }
 
     public Tile GetTile(Ray ray)

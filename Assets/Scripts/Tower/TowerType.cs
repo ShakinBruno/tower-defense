@@ -2,5 +2,6 @@
 {
     None,
     Laser,
-    Mortar
+    Mortar,
+    RocketLauncher
 }

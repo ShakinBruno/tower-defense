@@ -14,6 +14,7 @@ public class EnemyFactory : GameObjectFactory
         [FloatRangeSlider(0.2f, 5f)] public FloatRange speed = new FloatRange(1f);
         [FloatRangeSlider(-0.4f, 0.4f)] public FloatRange pathOffset = new FloatRange(0f);
         [FloatRangeSlider(10f, 1000f)] public FloatRange health = new FloatRange(100f);
+        [FloatRangeSlider(1f, 1000f)] public FloatRange prize = new FloatRange(10f);
     }
 
     public Enemy Get(EnemyType type)
@@ -25,7 +26,8 @@ public class EnemyFactory : GameObjectFactory
             config.scale.RandomValueInRange, 
             config.speed.RandomValueInRange, 
             config.pathOffset.RandomValueInRange,
-            config.health.RandomValueInRange);
+            config.health.RandomValueInRange,
+            config.prize.RandomValueInRange);
         return instance;
     }
 

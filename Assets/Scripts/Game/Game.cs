@@ -9,16 +9,19 @@ public class Game : MonoBehaviour
     [SerializeField] private Scenario scenario;
     [SerializeField] private TileContentFactory tileContentFactory;
     [SerializeField] private WarFactory warFactory;
-    [SerializeField, Range(0, 100)] private int startingPlayerHealth = 20;
+    [SerializeField, Range(0, 100)] private int startingPlayerHealth;
+    [SerializeField, Range(0, 10000)] private int startingPlayerBank;
     [SerializeField] private float[] gameSpeeds;
 
     private bool isDragging;
     private bool isPaused;
     private int gameSpeedIndex;
     private int playerHealth;
+    private int playerBank;
     private float selectedSpeed;
     private readonly GameBehaviorCollection enemies = new GameBehaviorCollection();
     private readonly GameBehaviorCollection nonEnemies = new GameBehaviorCollection();
+    private Tile selectedTile;
     private Scenario.State activeScenario;
     private Camera mainCamera;
     private static Game instance;
@@ -33,6 +36,7 @@ public class Game : MonoBehaviour
         mainCamera = Camera.main;
         selectedSpeed = gameSpeeds[gameSpeedIndex];
         playerHealth = startingPlayerHealth;
+        playerBank = startingPlayerBank;
         board.Initialize(tileContentFactory);
         activeScenario = scenario.Begin();
     }
@@ -41,6 +45,7 @@ public class Game : MonoBehaviour
     {
         GameHUD.UpdateWaveInfo("Start a new game.");
         GameHUD.UpdatePrompt("Start");
+        GameHUD.UpdateBank(playerBank);
     }
 
     private void Update()
@@ -64,8 +69,8 @@ public class Game : MonoBehaviour
         }
 
         Time.timeScale = isPaused ? 0f : selectedSpeed;
-        if (playerHealth <= 0 && startingPlayerHealth > 0) StartCoroutine(OnGameLost());
-        
+        if (playerHealth <= 0 && startingPlayerHealth > 0) StartCoroutine(GameLost());
+
         enemies.GameUpdate();
         Physics.SyncTransforms();
         board.GameUpdate();
@@ -84,7 +89,7 @@ public class Game : MonoBehaviour
             GameHUD.UpdateHealth(playerHealth);
             GameHUD.SetPromptLabelActive(false);
             GameHUD.UpdatePrompt("Skip");
-            instance.StartCoroutine(instance.activeScenario.Progress(OnScenarioFinished()));
+            instance.StartCoroutine(instance.activeScenario.Progress(ScenarioFinished()));
         }
     }
 
@@ -94,17 +99,40 @@ public class Game : MonoBehaviour
         selectedSpeed = gameSpeeds[gameSpeedIndex];
         return selectedSpeed;
     }
-    
-    public bool PauseOrResumeGame()
+
+    public void PauseGame(bool pause)
     {
-        isPaused = !isPaused;
-        return isPaused;
+        isPaused = pause;
     }
-    
+
+    public void SellContent()
+    {
+        switch (selectedTile.Content.Type)
+        {
+            case TileContentType.Obstacle:
+                board.SellObstacle(selectedTile, ref playerBank);
+                break;
+            case TileContentType.Tower:
+                board.SellTower(selectedTile, ref playerBank);
+                break;
+        }
+        
+        GameHUD.UpdateBank(playerBank);
+        GameHUD.SetManageLayoutActive(false);
+        GameHUD.SetContentLayoutActive(true);
+    }
+
     public static void EnemyReachedDestination()
     {
         instance.playerHealth--;
         GameHUD.UpdateHealth(instance.playerHealth);
+    }
+
+    public static void EnemyKilled(float prize)
+    {
+        int prizeRounded = Mathf.RoundToInt(prize);
+        instance.playerBank += prizeRounded;
+        GameHUD.UpdateBank(instance.playerBank);
     }
 
     public static Shell SpawnShell()
@@ -114,9 +142,23 @@ public class Game : MonoBehaviour
         return shell;
     }
 
-    public static Explosion SpawnExplosion()
+    public static Missile SpawnMissile()
     {
-        Explosion explosion = instance.warFactory.Explosion;
+        Missile missile = instance.warFactory.Missile;
+        instance.nonEnemies.Add(missile);
+        return missile;
+    }
+
+    public static Explosion SpawnShellExplosion()
+    {
+        Explosion explosion = instance.warFactory.ShellExplosion;
+        instance.nonEnemies.Add(explosion);
+        return explosion;
+    }
+    
+    public static Explosion SpawnMissileExplosion()
+    {
+        Explosion explosion = instance.warFactory.MissileExplosion;
         instance.nonEnemies.Add(explosion);
         return explosion;
     }
@@ -129,14 +171,14 @@ public class Game : MonoBehaviour
         instance.enemies.Add(enemy);
     }
 
-    private IEnumerator OnGameLost()
+    private IEnumerator GameLost()
     {
         Debug.Log("Defeat!");
         yield return new WaitForSecondsRealtime(3f);
         RestartLevel();
     }
 
-    private IEnumerator OnScenarioFinished()
+    private IEnumerator ScenarioFinished()
     {
         yield return new WaitUntil(() => enemies.IsEmpty);
         Debug.Log("Victory!");
@@ -149,22 +191,36 @@ public class Game : MonoBehaviour
         Scene scene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(scene.buildIndex);
     }
-    
+
     private void HandleTouch(Touch touch)
     {
         if (EventSystem.current.IsPointerOverGameObject() || instance.isDragging) return;
+        GameHUD.SetManageLayoutActive(false);
+        GameHUD.SetContentLayoutActive(true);
+        selectedTile = null;
         Ray touchRay = instance.mainCamera.ScreenPointToRay(touch.position);
         Tile tile = instance.board.GetTile(touchRay);
         if (tile == null) return;
+        selectedTile = tile;
 
-        switch (SelectedType)
+        if (SelectedType != TileContentType.None)
         {
-            case TileContentType.Obstacle:
-                instance.board.ToggleObstacle(tile);
-                break;
-            case TileContentType.Tower:
-                instance.board.ToggleTower(tile, SelectedTowerType);
-                break;
+            switch (SelectedType)
+            {
+                case TileContentType.Obstacle:
+                    instance.board.BuyObstacle(tile, ref playerBank);
+                    break;
+                case TileContentType.Tower:
+                    instance.board.BuyTower(tile, SelectedTowerType, ref playerBank);
+                    break;
+            }
+            
+            GameHUD.UpdateBank(playerBank);
+        }
+        else if (selectedTile.Content.isObstacle || selectedTile.Content.isTower)
+        {
+            GameHUD.SetContentLayoutActive(false);
+            GameHUD.SetManageLayoutActive(true);
         }
     }
 }

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   emptyPrefab: {fileID: 7733342162634005242, guid: 5f66656c3a1d0f743b5154d905ea94c7, type: 3}
   wallPrefab: {fileID: 8421965516579720467, guid: d8138a68a9806dc4fa767342d1f7995a, type: 3}
-  obstaclePrefab: {fileID: 7403517092963515024, guid: 96b45c9f663c8494f923ab2185a3fc63, type: 3}
+  obstaclePrefab: {fileID: 1338915285004422605, guid: 96b45c9f663c8494f923ab2185a3fc63, type: 3}
   towerPrefabs:
   - {fileID: 9183526974202060623, guid: aec861de8fc9fc94184b6f3e192b0de1, type: 3}
   - {fileID: 1129688015946537857, guid: 6578979e2fe24ed4f831f7981909170c, type: 3}
+  - {fileID: 6736596828284151148, guid: 9267621ae3959d549b52ce467953524a, type: 3}

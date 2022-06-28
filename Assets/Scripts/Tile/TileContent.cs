@@ -13,6 +13,7 @@ public class TileContent : MonoBehaviour
     public bool isSpawnPoint => type == TileContentType.SpawnPoint;
     public bool isTower => type == TileContentType.Tower;
     public bool BlocksPath => isObstacle || isTower;
+    public TileContentType Type => type;
 
     public virtual void GameUpdate()
     {

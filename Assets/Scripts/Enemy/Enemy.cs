@@ -7,8 +7,7 @@ public class Enemy : GameBehavior
 
     private float progress, progressFactor;
     private float directionAngleFrom, directionAngleTo;
-    private float speed, pathOffset;
-    private float health;
+    private float speed, pathOffset, health, prize;
     private Tile tileFrom, tileTo;
     private Vector3 positionFrom, positionTo;
     private EnemyAnimator animator;
@@ -29,13 +28,14 @@ public class Enemy : GameBehavior
         animator.Destroy();
     }
 
-    public void Initialize(float scale, float speed, float pathOffset, float health)
+    public void Initialize(float scale, float speed, float pathOffset, float health, float prize)
     {
         Scale = scale;
         model.localScale = new Vector3(scale, scale, scale);
         this.speed = speed;
         this.pathOffset = pathOffset;
         this.health = health;
+        this.prize = prize;
         animator.PlayIntro();
         TargetPointCollider.enabled = false;
     }
@@ -65,6 +65,7 @@ public class Enemy : GameBehavior
         {
             animator.PlayDying();
             TargetPointCollider.enabled = false;
+            Game.EnemyKilled(prize);
             return true;
         }
 

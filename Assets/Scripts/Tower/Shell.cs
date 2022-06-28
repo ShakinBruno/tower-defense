@@ -13,7 +13,7 @@ public class Shell : WarEntity
 
         if (p.y <= 0f)
         {
-            Game.SpawnExplosion().Initialize(targetPoint, blastRadius, damage);
+            Game.SpawnShellExplosion().Initialize(targetPoint, blastRadius, damage);
             OriginFactory.Reclaim(this);
             return false;
         }

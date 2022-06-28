@@ -1,40 +1,46 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameHUD : MonoBehaviour
 {
-    [SerializeField] private Color baseColor;
-    [SerializeField] private Color selectedColor;
-    [SerializeField] private ButtonMenuConfig pause;
-    [SerializeField] private ButtonMenuConfig speed;
+    [Header("Core HUD")] 
+    [SerializeField] private Button pauseButton;
+    [SerializeField] private Button speedButton;
+    [SerializeField] private TextMeshProUGUI speedText;
+    [SerializeField] private TextMeshProUGUI bankText;
+    
+    [Header("Wave HUD")] 
     [SerializeField] private TextMeshProUGUI waveInfoText;
     [SerializeField] private TextMeshProUGUI waveTimerText;
-    [SerializeField] private PromptConfig interactionPrompt;
-    [SerializeField] private ButtonContentConfig obstacle;
-    [SerializeField] private ButtonContentConfig laserTower;
-    [SerializeField] private ButtonContentConfig mortar;
+    [SerializeField] private GameObject promptPanel;
+    [SerializeField] private TextMeshProUGUI promptText;
+    [SerializeField] private Button promptButton;
+
+    [Header("World HUD")]
     [SerializeField] private TextMeshPro waveText;
     [SerializeField] private TextMeshPro healthText;
+    
+    [Header("Content/Edit Layouts")] 
+    [SerializeField] private GameObject contentLayout;
+    [SerializeField] private GameObject editLayout;
+    [SerializeField] private Button sellButton;
+    [SerializeField] private ContentConfig[] contentConfigs;
+
+    [Header("Pause Screen")] 
+    [SerializeField] private GameObject pausePanel;
+    [SerializeField] private Button resumeButton;
+    [SerializeField] private Button restartButton;
+    [SerializeField] private Button exitButton;
+    
+    [Header("Colors")]
+    [SerializeField] private Color baseColor;
+    [SerializeField] private Color selectedColor;
 
     [Serializable]
-    private struct PromptConfig
-    {
-        public GameObject prompt;
-        public TextMeshProUGUI text;
-        public Button button;
-    }
-
-    [Serializable]
-    private struct ButtonMenuConfig
-    {
-        public Button button;
-        public TextMeshProUGUI text;
-    }
-
-    [Serializable]
-    private struct ButtonContentConfig
+    private struct ContentConfig
     {
         public Button button;
         public Image image;
@@ -44,8 +50,11 @@ public class GameHUD : MonoBehaviour
     private static GameHUD instance;
     public static void UpdateWaveInfo(string info) => instance.waveInfoText.text = info;
     public static void UpdateHealth(int currentHealth) => instance.healthText.text = $"{currentHealth} LIVES";
-    public static void UpdatePrompt(string prompt) => instance.interactionPrompt.text.text = prompt;
-    public static void SetPromptLabelActive(bool active) => instance.interactionPrompt.prompt.SetActive(active);
+    public static void UpdatePrompt(string prompt) => instance.promptText.text = prompt;
+    public static void UpdateBank(int amount) => instance.bankText.text = $"{amount}$";
+    public static void SetPromptLabelActive(bool active) => instance.promptPanel.SetActive(active);
+    public static void SetContentLayoutActive(bool active) => instance.contentLayout.gameObject.SetActive(active);
+    public static void SetManageLayoutActive(bool active) => instance.editLayout.gameObject.SetActive(active);
     public static void UpdateWaveText(int currentWave, int totalWaves) =>
         instance.waveText.text = $"WAVE {currentWave}/{totalWaves}";
     public static void UpdateTimer(int minutes, int seconds) =>
@@ -59,31 +68,50 @@ public class GameHUD : MonoBehaviour
 
     private void OnEnable()
     {
-        pause.button.onClick.AddListener(() => PauseOrResumeGame(pause.text));
-        speed.button.onClick.AddListener(() => ChangeGameSpeed(speed.text));
-        interactionPrompt.button.onClick.AddListener(() => game.StartOrSkipWave(game.HasGameStarted));
-        obstacle.button.onClick.AddListener(() =>
-            ChangeSelectedType(TileContentType.Obstacle, TowerType.None, obstacle.image));
-        laserTower.button.onClick.AddListener(() =>
-            ChangeSelectedType(TileContentType.Tower, TowerType.Laser, laserTower.image));
-        mortar.button.onClick.AddListener(() =>
-            ChangeSelectedType(TileContentType.Tower, TowerType.Mortar, mortar.image));
+        pauseButton.onClick.AddListener(() => PauseGame(true));
+        resumeButton.onClick.AddListener(() => PauseGame(false));
+        restartButton.onClick.AddListener(RestartGame);
+        exitButton.onClick.AddListener(() => SceneManager.LoadScene(0));
+        speedButton.onClick.AddListener(() => ChangeGameSpeed(speedText));
+        promptButton.onClick.AddListener(() => game.StartOrSkipWave(game.HasGameStarted));
+        sellButton.onClick.AddListener(() => game.SellContent());
+        
+        contentConfigs[0].button.onClick.AddListener(() =>
+            ChangeSelectedType(TileContentType.Obstacle, TowerType.None, contentConfigs[0].image));
+        contentConfigs[1].button.onClick.AddListener(() =>
+            ChangeSelectedType(TileContentType.Tower, TowerType.Laser, contentConfigs[1].image));
+        contentConfigs[2].button.onClick.AddListener(() =>
+            ChangeSelectedType(TileContentType.Tower, TowerType.Mortar, contentConfigs[2].image));
+        contentConfigs[3].button.onClick.AddListener(() =>
+            ChangeSelectedType(TileContentType.Tower, TowerType.RocketLauncher, contentConfigs[3].image));
     }
 
     private void OnDisable()
     {
-        pause.button.onClick.RemoveAllListeners();
-        speed.button.onClick.RemoveAllListeners();
-        interactionPrompt.button.onClick.RemoveAllListeners();
-        obstacle.button.onClick.RemoveAllListeners();
-        laserTower.button.onClick.RemoveAllListeners();
-        mortar.button.onClick.RemoveAllListeners();
+        pauseButton.onClick.RemoveAllListeners();
+        resumeButton.onClick.RemoveAllListeners();
+        restartButton.onClick.RemoveAllListeners();
+        exitButton.onClick.RemoveAllListeners();
+        speedButton.onClick.RemoveAllListeners();
+        promptButton.onClick.RemoveAllListeners();
+        sellButton.onClick.RemoveAllListeners();
+
+        foreach (ContentConfig config in contentConfigs)
+        {
+            config.button.onClick.RemoveAllListeners();
+        }
     }
-    
-    private void PauseOrResumeGame(TextMeshProUGUI text)
+
+    private void PauseGame(bool pause)
     {
-        bool isGamePaused = game.PauseOrResumeGame();
-        text.text = isGamePaused ? "I>" : "II";
+        game.PauseGame(pause);
+        pausePanel.SetActive(pause);
+    }
+
+    private void RestartGame()
+    {
+        int levelIndex = SceneManager.GetActiveScene().buildIndex;
+        SceneManager.LoadScene(levelIndex);
     }
 
     private void ChangeGameSpeed(TextMeshProUGUI text)
@@ -131,20 +159,9 @@ public class GameHUD : MonoBehaviour
 
     private void ResetButtonColorsExcept(Image image)
     {
-        if (obstacle.image == image)
+        foreach (ContentConfig config in contentConfigs)
         {
-            laserTower.image.color = baseColor;
-            mortar.image.color = baseColor;
-        }
-        else if (laserTower.image == image)
-        {
-            obstacle.image.color = baseColor;
-            mortar.image.color = baseColor;
-        }
-        else if (mortar.image == image)
-        {
-            obstacle.image.color = baseColor;
-            laserTower.image.color = baseColor;
+            if (config.image != image) config.image.color = baseColor;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 public class Explosion : WarEntity
 {
-    [SerializeField, Range(0f, 1f)] private float duration = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float duration;
 
     private float age;
 

@@ -224,12 +224,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 5
-  targetMask:
-    serializedVersion: 2
-    m_Bits: 128
+  cost: 250
   targetingRange: 2.5
   turret: {fileID: 5701323724634339637}
   laserBeam: {fileID: 6424415959312912581}
+  turretRotationSpeed: 150
   damagePerSecond: 20
 --- !u!1 &5368980556387806200
 GameObject:

@@ -2,9 +2,13 @@
 
 public abstract class Tower : TileContent
 {
-    [SerializeField, Range(1.5f, 10.5f)] protected float targetingRange = 1.5f;
+    [SerializeField] private int cost;
+    [SerializeField, Range(1.5f, 10.5f)] protected float targetingRange;
+    [SerializeField, Range(50f, 500f)] protected float rotationSpeed;
 
+    protected const int enemyLayerMask = 1 << 7;
     public abstract TowerType TowerType { get; }
+    public int Cost => cost;
 
     protected bool AcquireTarget(out TargetPoint target)
     {
