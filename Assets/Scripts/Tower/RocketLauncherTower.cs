@@ -28,7 +28,7 @@ public class RocketLauncherTower : Tower
             }
             else
             {
-                launchProgress = 0.999f;
+                launchProgress = 0f;
             }
         }
     }

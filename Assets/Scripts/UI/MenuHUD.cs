@@ -2,7 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
+[RequireComponent(typeof(Energy))]
 public class MenuHUD : MonoBehaviour
 {
     [Header("Menu Layout")] 
@@ -18,8 +20,32 @@ public class MenuHUD : MonoBehaviour
 
     [Header("Energy Bar")] 
     [SerializeField] private TextMeshProUGUI energyText;
+    [SerializeField] private GameObject timerLabel;
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private Button addEnergyButton;
+
+    [Header("Error Pop-Up")] 
+    [SerializeField] private GameObject errorPanel;
+    [SerializeField] private Button closeButton;
+
+    private static MenuHUD instance;
+    private Energy energy;
+    private GameDataParser gameDataParser;
+    private Advertisements advertisements;
+    public static void UpdateEnergy(int currentEnergy, int maxEnergy) =>
+        instance.energyText.text = $"Energy: {currentEnergy}/{maxEnergy}";
+    public static void UpdateTimer(int minutes, int seconds) => instance.timerText.text = $"{minutes:D2}:{seconds:D2}";
+    public static void SetTimerActive(bool active) => instance.timerLabel.SetActive(active);
+    public static void SetAddEnergyActive(bool active) => instance.addEnergyButton.gameObject.SetActive(active);
+    public static void SetErrorActive(bool active) => instance.errorPanel.SetActive(active);
+
+    private void Awake()
+    {
+        instance = this;
+        energy = GetComponent<Energy>();
+        gameDataParser = FindObjectOfType<GameDataParser>();
+        advertisements = FindObjectOfType<Advertisements>();
+    }
 
     private void OnEnable()
     {
@@ -27,11 +53,19 @@ public class MenuHUD : MonoBehaviour
         levelsButton.onClick.AddListener(SwitchToLevelsLayout);
         exitButton.onClick.AddListener(Application.Quit);
         menuButton.onClick.AddListener(SwitchToMenuLayout);
+        addEnergyButton.onClick.AddListener(Advertisements.ShowRewarded);
+        closeButton.onClick.AddListener(() => SetErrorActive(false));
 
         for (var i = 0; i < levelButtons.Length; i++)
         {
             int sceneIndex = i + 1;
-            levelButtons[i].onClick.AddListener(() => SceneManager.LoadScene(sceneIndex));
+            levelButtons[i].onClick.AddListener(() =>
+            {
+                if (energy.PlayerEnergy <= 0) return;
+                energy.PlayerEnergy--;
+                gameDataParser.Save();
+                SceneManager.LoadScene(sceneIndex);
+            });
         }
     }
 
@@ -41,6 +75,7 @@ public class MenuHUD : MonoBehaviour
         levelsButton.onClick.RemoveAllListeners();
         exitButton.onClick.RemoveAllListeners();
         menuButton.onClick.RemoveAllListeners();
+        addEnergyButton.onClick.RemoveAllListeners();
 
         foreach (Button button in levelButtons)
         {
@@ -50,7 +85,10 @@ public class MenuHUD : MonoBehaviour
 
     private void LoadRandomLevel()
     {
+        if (energy.PlayerEnergy <= 0) return;
         int randomBuildIndex = Random.Range(1, SceneManager.sceneCountInBuildSettings);
+        energy.PlayerEnergy--;
+        gameDataParser.Save();
         SceneManager.LoadScene(randomBuildIndex);
     }
 

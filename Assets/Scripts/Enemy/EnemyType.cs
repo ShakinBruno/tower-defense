@@ -2,5 +2,6 @@
 {
     Small,
     Medium,
-    Large
+    Large,
+    Grenadier
 }

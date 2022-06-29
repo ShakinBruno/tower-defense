@@ -10,22 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 194a20d3b05a43cd887117ddb427a381, type: 3}
-  m_Name: Wave 1
+  m_Name: L1 Wave 2
   m_EditorClassIdentifier: 
   waveCooldown: 10
   spawnSequences:
   - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
     type: 0
-    amount: 10
-    spawnCooldown: 5
-    cooldown: 0.25
+    amount: 15
+    spawnCooldown: 3
+    cooldown: 0.75
   - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
     type: 1
-    amount: 5
-    spawnCooldown: 7.5
-    cooldown: 1
-  - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
-    type: 2
-    amount: 1
-    spawnCooldown: 10
-    cooldown: 5
+    amount: 3
+    spawnCooldown: 5
+    cooldown: 3

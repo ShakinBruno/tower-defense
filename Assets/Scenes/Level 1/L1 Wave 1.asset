@@ -9,9 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47a1c945a5ec4c2b99e51300147ccb03, type: 3}
-  m_Name: Scenario Level 1
+  m_Script: {fileID: 11500000, guid: 194a20d3b05a43cd887117ddb427a381, type: 3}
+  m_Name: L1 Wave 1
   m_EditorClassIdentifier: 
-  waves:
-  - {fileID: 11400000, guid: 7ac15c0fa419df44f8a8c809e1073fe5, type: 2}
-  - {fileID: 11400000, guid: d469c7613a7f42843a3de068ba2aceea, type: 2}
+  waveCooldown: 0
+  spawnSequences:
+  - factory: {fileID: 11400000, guid: 24399fa32fa2a284bb2e9c7fc3050394, type: 2}
+    type: 0
+    amount: 10
+    spawnCooldown: 3
+    cooldown: 1

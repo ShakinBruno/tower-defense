@@ -226,9 +226,9 @@ MonoBehaviour:
   type: 5
   cost: 250
   targetingRange: 2.5
+  rotationSpeed: 150
   turret: {fileID: 5701323724634339637}
   laserBeam: {fileID: 6424415959312912581}
-  turretRotationSpeed: 150
   damagePerSecond: 20
 --- !u!1 &5368980556387806200
 GameObject:

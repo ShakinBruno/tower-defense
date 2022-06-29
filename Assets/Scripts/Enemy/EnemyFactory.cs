@@ -4,7 +4,7 @@ using UnityEngine;
 [CreateAssetMenu]
 public class EnemyFactory : GameObjectFactory
 {
-    [SerializeField] private EnemyConfig small, medium, large;
+    [SerializeField] private EnemyConfig small, medium, large, grenadier;
 
     [Serializable]
     private class EnemyConfig
@@ -43,6 +43,7 @@ public class EnemyFactory : GameObjectFactory
             EnemyType.Small => small,
             EnemyType.Medium => medium,
             EnemyType.Large => large,
+            EnemyType.Grenadier => grenadier,
             _ => null
         };
     }

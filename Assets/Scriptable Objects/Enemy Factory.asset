@@ -28,9 +28,9 @@ MonoBehaviour:
       max: 50
     prize:
       min: 10
-      max: 10
+      max: 20
   medium:
-    prefab: {fileID: 4457721481425905182, guid: 511247815c229da408aafc237a752192, type: 3}
+    prefab: {fileID: 8085023761113106657, guid: a7fa3f8f6f6a5f244aea20cc25755568, type: 3}
     scale:
       min: 0.9
       max: 1
@@ -45,7 +45,7 @@ MonoBehaviour:
       max: 120
     prize:
       min: 35
-      max: 35
+      max: 50
   large:
     prefab: {fileID: 8085023761113106657, guid: 51cc42adf7fc22d46a3b23c4a2034db6, type: 3}
     scale:
@@ -62,4 +62,21 @@ MonoBehaviour:
       max: 600
     prize:
       min: 100
-      max: 100
+      max: 150
+  grenadier:
+    prefab: {fileID: 4457721481425905182, guid: 511247815c229da408aafc237a752192, type: 3}
+    scale:
+      min: 1.4
+      max: 1.6
+    speed:
+      min: 0.3
+      max: 0.4
+    pathOffset:
+      min: 0
+      max: 0
+    health:
+      min: 750
+      max: 1000
+    prize:
+      min: 250
+      max: 350

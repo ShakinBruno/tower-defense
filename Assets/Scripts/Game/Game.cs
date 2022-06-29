@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
@@ -14,7 +13,6 @@ public class Game : MonoBehaviour
     [SerializeField] private float[] gameSpeeds;
 
     private bool isDragging;
-    private bool isPaused;
     private int gameSpeedIndex;
     private int playerHealth;
     private int playerBank;
@@ -26,6 +24,7 @@ public class Game : MonoBehaviour
     private Camera mainCamera;
     private static Game instance;
     public bool HasGameStarted { get; private set; }
+    public bool IsPaused { get; set; }
     public static bool SkipTimer { get; set; }
     public TileContentType SelectedType { get; set; }
     public TowerType SelectedTowerType { get; set; }
@@ -68,13 +67,21 @@ public class Game : MonoBehaviour
             }
         }
 
-        Time.timeScale = isPaused ? 0f : selectedSpeed;
-        if (playerHealth <= 0 && startingPlayerHealth > 0) StartCoroutine(GameLost());
+        Time.timeScale = IsPaused ? 0f : selectedSpeed;
+        if (playerHealth <= 0 && startingPlayerHealth > 0) GameLost();
 
         enemies.GameUpdate();
         Physics.SyncTransforms();
         board.GameUpdate();
         nonEnemies.GameUpdate();
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            GameHUD.PauseGame(true);
+        }
     }
 
     public void StartOrSkipWave(bool gameStarted)
@@ -98,11 +105,6 @@ public class Game : MonoBehaviour
         gameSpeedIndex = ++gameSpeedIndex % gameSpeeds.Length;
         selectedSpeed = gameSpeeds[gameSpeedIndex];
         return selectedSpeed;
-    }
-
-    public void PauseGame(bool pause)
-    {
-        isPaused = pause;
     }
 
     public void SellContent()
@@ -171,25 +173,16 @@ public class Game : MonoBehaviour
         instance.enemies.Add(enemy);
     }
 
-    private IEnumerator GameLost()
+    private void GameLost()
     {
-        Debug.Log("Defeat!");
-        yield return new WaitForSecondsRealtime(3f);
-        RestartLevel();
+        IsPaused = true;
+        GameHUD.SetDefeatLayoutActive(true);
     }
 
     private IEnumerator ScenarioFinished()
     {
         yield return new WaitUntil(() => enemies.IsEmpty);
-        Debug.Log("Victory!");
-        yield return new WaitForSecondsRealtime(3f);
-        RestartLevel();
-    }
-
-    private void RestartLevel()
-    {
-        Scene scene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(scene.buildIndex);
+        GameHUD.SetVictoryLayoutActive(true);
     }
 
     private void HandleTouch(Touch touch)
